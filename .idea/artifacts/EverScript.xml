@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="EverScript">
+    <output-path>$PROJECT_DIR$/out/artifacts/EverScript</output-path>
+    <root id="archive" name="EverScript.jar">
+      <element id="module-output" name="EverScript" />
+    </root>
+  </artifact>
+</component>
