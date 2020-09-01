@@ -27,7 +27,7 @@ public class EverScript {
     byte[] bytes = Files.readAllBytes(Paths.get(path));
 
     // Run native classes
-    new ESNativeClasses().declareClasses();
+    new ESNativeLibrary().declareClasses();
 
     run(new String(bytes, Charset.defaultCharset()));
     if (errors > 0) {
@@ -44,7 +44,7 @@ public class EverScript {
     BufferedReader reader = new BufferedReader(input);
 
     // Run native classes
-    new ESNativeClasses().declareClasses();
+    new ESNativeLibrary().declareClasses();
 
     System.out.println("EasyScript REPL [31st of August, 2020]");
     System.out.println("Press CTRL + C to exit");

@@ -1,6 +1,6 @@
 package com.linkbyte.everscript;
 
-public class ESNativeClasses {
+public class ESNativeLibrary {
     private final String newLine = System.getProperty("line.separator");
 
     private String ErrorHandler() {

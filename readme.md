@@ -20,7 +20,7 @@ A dynamically-typed programming language based on Bob Nystrom's Lox from Craftin
 
 <br>
 
-# Features that aren't added yet but I am considering on adding
+# Features that aren't added yet, but I am considering on adding
 
 - Private methods;
 - Abstract classes and methods;
@@ -33,6 +33,6 @@ A dynamically-typed programming language based on Bob Nystrom's Lox from Craftin
 
 You are free to open issues or pull requests. I'm not the best at Java, so I would highly appreciate it if you could suggest some places where the codebase could be improved.
 
-Also open to people that would like to be active contributors for EverScript. The development team is currently just me and a friend that refactors code and helps out with documentation (still to come).
+Also, I am open to people that would like to be active contributors for EverScript. The development team is currently just me, and a friend that refactors code and helps out with the documentation (still to come).
 
 
