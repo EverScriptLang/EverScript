@@ -14,7 +14,7 @@ public class EverScript {
 
   public static void main(String[] args) throws IOException {
     if (args.length > 1) {
-      System.out.println("Usage: cscript [script]");
+      System.out.println("Usage: everscript [script]");
       System.exit(64);
     } else if (args.length == 1) {
       runFile(args[0]);
@@ -27,11 +27,11 @@ public class EverScript {
     byte[] bytes = Files.readAllBytes(Paths.get(path));
 
     // Run native classes
-    new ESNativeLibrary().declareClasses();
+    nativeErrorClass();
 
     run(new String(bytes, Charset.defaultCharset()));
     if (errors > 0) {
-      System.out.print("The EasyScript interpreter found a total of " + errors + " error");
+      System.out.print("The EverScript interpreter found a total of " + errors + " error");
       if (errors > 1) System.out.println("s");
       else System.out.println();
       if (hadError) System.exit(65);
@@ -44,7 +44,7 @@ public class EverScript {
     BufferedReader reader = new BufferedReader(input);
 
     // Run native classes
-    new ESNativeLibrary().declareClasses();
+    nativeErrorClass();
 
     System.out.println("EasyScript REPL [31st of August, 2020]");
     System.out.println("Press CTRL + C to exit");
@@ -86,7 +86,7 @@ public class EverScript {
   }
 
   static void runtimeError(RuntimeError error) {
-    System.out.printf("[line %d, col %d]: error: %s%n", error.token.line, error.token.col, error.getMessage());
+    System.out.printf("[line %d, col %d]: %s%n", error.token.line, error.token.col, error.getMessage());
     System.out.println();
     hadRuntimeError = true;
   }
@@ -94,5 +94,20 @@ public class EverScript {
   private static String repeat(int n) {
     if (n <= 0) return "";
     return new String(new char[n]).replace('\0', ' ');
+  }
+
+  // Native classes
+  private static void nativeErrorClass() throws IOException {
+    InputStreamReader eci = new InputStreamReader(EverScript.class.getResourceAsStream("natives/Error.evs"));
+    BufferedReader ecbf = new BufferedReader(eci);
+
+    String line;
+    StringBuilder source = new StringBuilder();
+
+    while ((line = ecbf.readLine()) != null) {
+      source.append(line).append("\n");
+    }
+
+    EverScript.run(source.toString());
   }
 }

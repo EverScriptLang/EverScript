@@ -36,18 +36,22 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 Object value = arguments.get(0);
-                if (value instanceof String) return "string";
-                else if (value instanceof Double) return "number";
-                else if (value instanceof Boolean) return "boolean";
-                else if (value instanceof ESFunction) return "function";
-                else if (value instanceof ESClass) return "class";
-                else if (value instanceof ESArray) return "array";
-                else if (value instanceof ESDictionary) return "object";
-                else if (value instanceof ESInstance) return "instance";
-                else if (value instanceof ESNativeInstance) return "native instance";
-                return null;
+                return checkType(value);
             }
         });
+    }
+
+    private String checkType(Object value) {
+        if (value instanceof String) return "string";
+        else if (value instanceof Double) return "number";
+        else if (value instanceof Boolean) return "boolean";
+        else if (value instanceof ESFunction) return "function";
+        else if (value instanceof ESClass) return "class";
+        else if (value instanceof ESArray) return "array";
+        else if (value instanceof ESDictionary) return "object";
+        else if (value instanceof ESInstance) return "instance";
+        else if (value instanceof ESNativeInstance) return "native instance";
+        return null;
     }
 
     void interpret(List<Stmt> statements) {
@@ -227,12 +231,12 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object module = evaluate(stmt.module);
 
         if (!(module instanceof String)) {
-            throw new RuntimeError(stmt.keyword, "The provided module name must be a string.");
+            throw new RuntimeError(stmt.keyword, "Expected type 'string' for the 'module' argument, got '" + checkType(module) + "' instead.");
         }
 
         String name = (String) module;
 
-        if (name.startsWith("EasyScript.")) {
+        if (name.startsWith("EverScript.")) {
             String library = name.split("\\.")[1];
             if (library.equals("System")) {
                 globals.define(stmt.namespace.lexeme, ESStandardLibrary._System);
@@ -252,7 +256,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 source.append(curLine).append("\n");
             }
         } catch (IOException e) {
-            throw new RuntimeError(stmt.keyword, "Could not import module '" + module + "'.");
+            throw new RuntimeError(stmt.keyword, "There was an error while trying to import '" + module + "'.");
         }
 
         EverScript.run(source.toString());
@@ -329,7 +333,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         if (!(callee instanceof ESCallable)) {
-            throw new RuntimeError(expr.paren, "Can only call functions and classes");
+            throw new RuntimeError(expr.paren, "Only functions and classes can be called.");
         }
 
         ESCallable function = (ESCallable) callee;

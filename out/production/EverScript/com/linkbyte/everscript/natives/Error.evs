@@ -1,0 +1,45 @@
+class Error: {
+  message() => {
+    return "No message defined.";
+  }
+
+  getType() => {
+    return "Error";
+  }
+}
+
+class Exception inherits Error: {
+  constructor(type, msg) => {
+    if (typeof(type) != "string") {
+      throw Exception("TypeError", "Expected parameter 'type' to be of type 'string', got type '" + typeof(msg) + "' instead.");
+    } else this.type = type;
+
+    if (typeof(msg) != "string") {
+      throw Exception("TypeError", "Expected parameter 'message' to be of type 'string', got type '" + typeof(msg) + "' instead.");
+    } else this.msg = msg;
+  }
+
+  message() => {
+    return this.type + ": " + this.msg;
+  }
+
+  getType() => {
+    return "Exception::" + this.type;
+  }
+}
+
+class UnhandledException inherits Error: {
+  constructor(msg) => {
+     if (typeof(msg) != "string") {
+       throw Exception("TypeError", "Expected parameter 'message' to be of type 'string', got type '" + typeof(msg) + "' instead.");
+     } else this.msg = msg;
+  }
+
+  message() => {
+    return this.msg;
+  }
+
+  getType() => {
+    return "UnhandledException";
+  }
+}

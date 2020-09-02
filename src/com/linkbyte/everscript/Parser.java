@@ -508,6 +508,11 @@ class Parser {
                 case WHILE:
                 case PRINT:
                 case RETURN:
+                case ENUM:
+                case THROW:
+                case STATIC:
+                case INHERITS:
+                case IMPORT:
                     return;
             }
             advance();

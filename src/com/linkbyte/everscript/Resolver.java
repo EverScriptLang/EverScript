@@ -157,11 +157,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   @Override
   public Void visitReturnStmt(Stmt.Return stmt) {
     if (currentFunction == FunctionType.NONE) {
-      EverScript.error(stmt.keyword, "ParseError", "Cannot return from top-level code.");
+      EverScript.error(stmt.keyword, "SyntaxError", "Illegal return statement.");
     }
     if (stmt.value != null) {
       if (currentFunction == FunctionType.INITIALIZER) {
-        EverScript.error(stmt.keyword, "ParseError", "Cannot return a value from an initializer.");
+        EverScript.error(stmt.keyword, "SyntaxError", "Cannot return a value from an initializer.");
       }
       resolve(stmt.value);
     }
@@ -251,9 +251,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   @Override
   public Void visitSuperExpr(Expr.Super expr) {
     if (currentClass == ClassType.NONE) {
-      EverScript.error(expr.keyword, "ParseError", "Cannot use 'super' outside of a class.");
+      EverScript.error(expr.keyword, "SyntaxError", "Cannot use 'super' outside of a class.");
     } else if (currentClass != ClassType.SUBCLASS) {
-      EverScript.error(expr.keyword, "ParseError", "Cannot use 'super' in a class with no superclass.");
+      EverScript.error(expr.keyword, "SyntaxError", "Cannot use 'super' in a class with no superclass.");
     }
     resolveLocal(expr, expr.keyword);
     return null;
@@ -284,7 +284,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitVariableExpr(Expr.Variable expr) {
     if (!scopes.isEmpty() &&
         scopes.peek().get(expr.name.lexeme) == Boolean.FALSE) {
-      EverScript.error(expr.name, "ParseError", "Cannot read local variable in its own initializer.");
+      EverScript.error(expr.name, "SyntaxError", "Cannot read local variable in its own initializer.");
     }
 
     resolveLocal(expr, expr.name);
@@ -373,7 +373,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     if (scopes.isEmpty()) return;
     Map<String, Boolean> scope = scopes.peek();
     if (scope.containsKey(name.lexeme)) {
-      EverScript.error(name, "ParseError", "Variable with this name already declared in this scope.");
+      EverScript.error(name, "SyntaxError", "Identifier '" + name.lexeme + "' has already been declared in this scope.");
     }
     scope.put(name.lexeme, false);
   }
