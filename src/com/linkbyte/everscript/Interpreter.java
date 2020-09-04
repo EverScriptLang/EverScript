@@ -141,13 +141,72 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Token runtimeError = new Token(TokenType.IDENTIFIER, "Error", null, stmt.keyword.line, stmt.keyword.col);
 
         if (!(thrown instanceof ESInstance && ((ESInstance) thrown).klass().inherits(runtimeError))) {
-            throw new RuntimeError(stmt.keyword, "Only objects that extend 'Error' can be thrown.");
+            throw new RuntimeError(stmt.keyword, "Only objects that inherit 'Error' can be thrown.");
         }
 
         Token messageToken = new Token(TokenType.IDENTIFIER, "message", null, 0, 0);
         Object message = ((ESCallable) ((ESInstance) thrown).get(messageToken)).call(this, new ArrayList<>());
 
         throw new UserRuntimeError((ESInstance) thrown, stringify(message), stmt.keyword);
+    }
+
+    private boolean errorMatches(Stmt.Catch stmt, RuntimeError error) {
+        for (Token errorType : stmt.errors) {
+            if (errorType.lexeme.equals("Error")) return true;
+            if (error instanceof RuntimeError.InterpreterRuntimeError && errorType.lexeme.equals("RuntimeError")) return true;
+            if (error instanceof RuntimeError.InterpreterRuntimeError) continue;
+            if (((UserRuntimeError) error).instance.klass().inherits(errorType)) return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Void visitTryStmt(Stmt.Try stmt) {
+        try {
+            execute(stmt.body);
+        } catch (RuntimeError error) {
+            if (error instanceof RuntimeError.InterpreterRuntimeError && !((RuntimeError.InterpreterRuntimeError) error).catchable) throw error;
+
+            for (Stmt.Catch catchStmt : stmt.catches) {
+                if (errorMatches(catchStmt, error)) {
+                    Environment enclosing = environment;
+                    environment = new Environment(enclosing);
+
+                    if (error instanceof UserRuntimeError) {
+                        environment.define(catchStmt.identifier.lexeme, ((UserRuntimeError) error).instance);
+                    } else {
+                        Map<String, ESFunction> methods = new HashMap<>();
+                        List<Stmt> body = new ArrayList<>();
+                        Token name = new Token(TokenType.IDENTIFIER, "message", null, 0, 0);
+                        List<Token> params = new ArrayList<>();
+                        body.add(new Stmt.Return(new Token(TokenType.RETURN, "return", null, 0, 0), new Expr.Literal(error.getMessage())));
+                        Stmt.Function function = new Stmt.Function(name, new Expr.Function(params, body));
+                        methods.put("message", new ESFunction(name.lexeme, function.function, environment, false));
+                        body = new ArrayList<>();
+                        name = new Token(TokenType.IDENTIFIER, "getType", null, 0, 0);
+                        params = new ArrayList<>();
+                        body.add(new Stmt.Return(new Token(TokenType.RETURN, "return", null, 0, 0), new Expr.Literal("RuntimeError")));
+                        function = new Stmt.Function(name, new Expr.Function(params, body));
+                        methods.put("getType", new ESFunction(name.lexeme, function.function, environment, false));
+                        Token superclass = new Token(TokenType.IDENTIFIER, "RuntimeError", null, catchStmt.identifier.line, catchStmt.identifier.col);
+                        ESClass runtimeError = new ESClass("RuntimeError", (ESClass) globals.get(superclass), methods, null);
+                        ESInstance errorInstance = new ESInstance(runtimeError);
+                        environment.define(catchStmt.identifier.lexeme, errorInstance);
+                    }
+                    execute(catchStmt);
+                    environment = enclosing;
+                }
+            }
+        } finally {
+            if (stmt.finallyStmt != null) execute(stmt.finallyStmt);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitCatchStmt(Stmt.Catch stmt) {
+        execute(stmt.body);
+        return null;
     }
 
     @Override

@@ -1,3 +1,7 @@
+// Native `Error` class
+// If you want to `throw` errors, check `Exception` and `UnhandledException`
+// `Error` behaves kind of like an interface. You inherit it and you must
+// implement the method `message`.
 class Error: {
   message() => {
     return "No message defined.";
@@ -8,15 +12,11 @@ class Error: {
   }
 }
 
+// Throws an `Exception`.
 class Exception inherits Error: {
   constructor(type, msg) => {
-    if (typeof(type) != "string") {
-      throw Exception("TypeError", "Expected parameter 'type' to be of type 'string', got type '" + typeof(msg) + "' instead.");
-    } else this.type = type;
-
-    if (typeof(msg) != "string") {
-      throw Exception("TypeError", "Expected parameter 'message' to be of type 'string', got type '" + typeof(msg) + "' instead.");
-    } else this.msg = msg;
+    this.type = type;
+    this.msg = msg;
   }
 
   message() => {
@@ -28,11 +28,11 @@ class Exception inherits Error: {
   }
 }
 
+// Throws an `UnhandledException`. Behaves similar to `Exception`,
+// except that here, the type of the error is hardcoded.
 class UnhandledException inherits Error: {
   constructor(msg) => {
-     if (typeof(msg) != "string") {
-       throw Exception("TypeError", "Expected parameter 'message' to be of type 'string', got type '" + typeof(msg) + "' instead.");
-     } else this.msg = msg;
+    this.msg = msg;
   }
 
   message() => {

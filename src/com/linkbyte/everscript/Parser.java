@@ -78,6 +78,7 @@ class Parser {
         if (match(WHILE)) return whileStatement();
         if (match(LEFT_BRACE)) return new Stmt.Block(block());
         if (match(THROW)) return throwStatement();
+        if (match(TRY)) return tryStatement();
         return expressionStatement();
     }
 
@@ -238,6 +239,31 @@ class Parser {
         Expr thrown = expression();
         consume(SEMICOLON, "Expected ';' after 'throw' statement.");
         return new Stmt.Throw(keyword, thrown);
+    }
+
+    private Stmt tryStatement() {
+        Token tryKeyword = previous();
+        Stmt body = statement();
+
+        List<Stmt.Catch> catches = new ArrayList<>();
+        while (match(CATCH)) {
+            Token catchKeyword = previous();
+
+            consume(LEFT_PAREN, "Expected '(' after 'catch'.");
+
+            List<Token> errors = new ArrayList<>();
+            errors.add(consume(IDENTIFIER, "Expected error class identifier."));
+            while (match(COMMA)) errors.add(consume(IDENTIFIER, "Expected error class identifier."));
+
+            Token identifier = consume(IDENTIFIER, "Expected variable identifier.");
+            consume(RIGHT_PAREN, "Expected ')' after error identifier.");
+
+            Stmt catchBody = statement();
+            catches.add(new Stmt.Catch(catchKeyword, errors, identifier, catchBody));
+        }
+        Stmt finallyStmt = null;
+        if (match(FINALLY)) finallyStmt = statement();
+        return new Stmt.Try(tryKeyword, body, catches, finallyStmt);
     }
 
     private Expr assignment() {

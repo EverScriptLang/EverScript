@@ -1,0 +1,205 @@
+class List: {
+  constructor() => {
+    this.head = null;
+    this.tail = null;
+    this.size = 0;
+  }
+
+  add(value) => {
+    if (this.size == 0) {
+      this.head = ListNode(value, null, null);
+      this.tail = this.head;
+    } else {
+      let node = ListNode(value, null, null);
+      this.tail.setNext(node);
+      this.tail = node;
+    }
+
+    this.size = this.size + 1;
+  }
+
+  get(idx) => {
+    return this.getNode(idx).getValue();
+  }
+
+  remove(idx) => {
+    let node = this.getNode(idx);
+    return this.removeNode(node).getValue();
+  }
+
+  removeValue(value) => {
+    let iter = this.iterator();
+
+    while (iter.hasNext()) {
+      if (iter.next() == value) return this.removeNode(iter.currNode()).getValue();
+    }
+
+    return null;
+  }
+
+  removeNode(node) => {
+    if (node == this.head and node == this.tail) {
+      this.head = null;
+      this.tail = null;
+    } else if (node == this.head) {
+      this.head = this.head.getNext();
+      this.head.removePrevious();
+    } else if (node == this.tail) {
+      this.tail = this.tail.getPrevious();
+      this.tail.removeNext();
+    } else node.getPrevious().setNext(node.getNext());
+
+    this.size = this.size - 1;
+    return node;
+  }
+
+  forEach(fun) => {
+    let iter = this.iterator();
+    while (iter.hasNext()) {
+      let val = fun(iter.next());
+      if (val != null) return val;
+    }
+  }
+
+  map(fun) => {
+    let result = List();
+
+    this.forEach(fn(val) => {
+      result.add(fun(val));
+    });
+
+    return result;
+  }
+
+  filter(fun) => {
+    let result = List();
+
+    this.forEach(fn(val) => {
+      if (fun(val)) result.add(val);
+    });
+
+    return result;
+  }
+
+  reduce(fun, reducer) => {
+    this.forEach(fn(val) => {
+      reducer = fun(val, reducer);
+    });
+
+    return reducer;
+  }
+
+  indexOf(value) => {
+    let currIdx = 0;
+
+    fn determineIndex(val) => {
+      if (val == value) return currIdx;
+      currIdx = currIdx + 1;
+    }
+
+    let idx = this.forEach(determineIndex);
+
+    if (idx != null) return idx;
+    return -1;
+  }
+
+  getNode(idx) => {
+    let node = this.head;
+    for (let i = 0; i < idx; i = i + 1) node = node.getNext();
+    return node;
+  }
+
+  getSize() => {
+    return this.size;
+  }
+
+  isEmpty() => {
+    return (this.head == null);
+  }
+
+  iterator() => {
+    return ListIterator(this.head);
+  }
+
+  toString() => {
+    let node = this.head;
+    let string = "{ ";
+
+    if (this.head != null) {
+      string = string + this.head;
+      node = node.getNext();
+    }
+
+    while (node != null) {
+      string = string + ", " + node;
+      node = node.getNext();
+    }
+
+    string = string + " }";
+    return string;
+  }
+}
+
+class ListNode: {
+  constructor(value, previous, next) => {
+    this.value = value;
+    this.previous = previous;
+    this.next = next;
+  }
+
+  getValue() => {
+    return this.value;
+  }
+
+  removePrevious() => {
+    this.previous.next = null;
+    this.previous = null;
+  }
+
+  getPrevious() => {
+    return this.previous();
+  }
+
+  setNext(next) => {
+    this.next = next;
+    next.previous = this;
+  }
+
+  removeNext() => {
+    this.next.previous = null;
+    this.next = null;
+  }
+
+  getNext() => {
+    return this.next;
+  }
+
+  toString() => {
+    return this.value;
+  }
+}
+
+class ListIterator: {
+  constructor(head) => {
+    this.curr = null;
+    this.nextNode = head;
+  }
+
+  hasNext() => {
+    return this.nextNode != null;
+  }
+
+  next() => {
+    this.curr = this.nextNode;
+    if (this.nextNode != null) {
+      this.nextNode = this.nextNode.getNext();
+      return this.curr.getValue();
+    }
+
+    return null;
+  }
+
+  currNode() => {
+    return this.curr;
+  }
+}

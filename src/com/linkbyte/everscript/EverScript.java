@@ -28,6 +28,7 @@ public class EverScript {
 
     // Run native classes
     nativeErrorClass();
+    nativeListClass();
 
     run(new String(bytes, Charset.defaultCharset()));
     if (errors > 0) {
@@ -45,6 +46,7 @@ public class EverScript {
 
     // Run native classes
     nativeErrorClass();
+    nativeListClass();
 
     System.out.println("EasyScript REPL [31st of August, 2020]");
     System.out.println("Press CTRL + C to exit");
@@ -105,6 +107,20 @@ public class EverScript {
     StringBuilder source = new StringBuilder();
 
     while ((line = ecbf.readLine()) != null) {
+      source.append(line).append("\n");
+    }
+
+    EverScript.run(source.toString());
+  }
+
+  private static void nativeListClass() throws IOException {
+    InputStreamReader lci = new InputStreamReader(EverScript.class.getResourceAsStream("natives/List.evs"));
+    BufferedReader lcbf = new BufferedReader(lci);
+
+    String line;
+    StringBuilder source = new StringBuilder();
+
+    while((line = lcbf.readLine()) != null) {
       source.append(line).append("\n");
     }
 

@@ -16,6 +16,8 @@ abstract class Stmt {
     R visitImportStmt(Import stmt);
     R visitEnumStmt(Enum stmt);
     R visitThrowStmt(Throw stmt);
+    R visitTryStmt(Try stmt);
+    R visitCatchStmt(Catch stmt);
   }
 
   static class Block extends Stmt {
@@ -194,6 +196,42 @@ abstract class Stmt {
 
     final Token keyword;
     final Expr thrown;
+  }
+
+  static class Try extends Stmt {
+    Try(Token keyword, Stmt body, List<Stmt.Catch> catches, Stmt finallyStmt) {
+      this.keyword = keyword;
+      this.body = body;
+      this.catches = catches;
+      this.finallyStmt = finallyStmt;
+    }
+
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitTryStmt(this);
+    }
+
+    final Token keyword;
+    final Stmt body;
+    final List<Stmt.Catch> catches;
+    Stmt finallyStmt;
+  }
+
+  static class Catch extends Stmt {
+    Catch(Token keyword, List<Token> errors, Token identifier, Stmt body) {
+      this.keyword = keyword;
+      this.errors = errors;
+      this.identifier = identifier;
+      this.body = body;
+    }
+
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitCatchStmt(this);
+    }
+
+    final Token keyword;
+    final List<Token> errors;
+    final Token identifier;
+    final Stmt body;
   }
 
   abstract <R> R accept(Visitor<R> visitor);
