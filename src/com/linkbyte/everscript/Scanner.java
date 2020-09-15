@@ -1,5 +1,6 @@
 package com.linkbyte.everscript;
 
+import java.io.File;
 import java.util.*;
 
 import static com.linkbyte.everscript.TokenType.*;
@@ -9,6 +10,7 @@ class Scanner {
     private final List<Token> tokens = new ArrayList<>();
     private final StringBuilder source;
     private int line, col, start, current;
+    private final String directory, file;
 
     static {
         keywords = new HashMap<>();
@@ -45,7 +47,19 @@ class Scanner {
         keywords.put("native", NATIVE);
     }
 
-    Scanner(String source) {
+    Scanner(String file, String source) {
+        String[] fileLoc;
+        if (File.separator.equals("\\")) fileLoc = file.split("\\\\");
+        else fileLoc = file.split(File.separator);
+
+        String dirName = "";
+        for (int i = 0; i < fileLoc.length - 1; i++) {
+            dirName += fileLoc[i] + File.separator;
+        }
+        String fileName = fileLoc[fileLoc.length - 1];
+
+        this.directory = dirName;
+        this.file = fileName;
         this.source = new StringBuilder(source);
         this.start = this.current = this.col = 0;
         this.line = 1;
@@ -56,7 +70,7 @@ class Scanner {
             start = current;
             scanToken();
         }
-        tokens.add(new Token(EOF, null, "EOF", line, col));
+        tokens.add(new Token(directory, file, EOF, null, "EOF", line, col));
         return tokens;
     }
 
@@ -66,61 +80,88 @@ class Scanner {
             case '(':
                 addToken(LEFT_PAREN);
                 break;
+
             case ')':
                 addToken(RIGHT_PAREN);
                 break;
+
             case '{':
                 addToken(LEFT_BRACE);
                 break;
+
             case '}':
                 addToken(RIGHT_BRACE);
                 break;
+
             case '[':
                 addToken(LEFT_BRACKET);
                 break;
+
             case ']':
                 addToken(RIGHT_BRACKET);
                 break;
+
             case ',':
                 addToken(COMMA);
                 break;
+
             case '.':
                 addToken(DOT);
                 break;
+
             case '-':
                 addToken(match('-') ? MINUS_MINUS : match('>') ? ARROW : MINUS);
                 break;
+
             case '+':
                 addToken(match('+') ? PLUS_PLUS : PLUS);
                 break;
+
             case '?':
                 if (match('.')) addToken(OPTIONAL_CHAINING);
                 else addToken(QUESTION);
                 break;
+
             case ';':
                 addToken(SEMICOLON);
                 break;
+
             case '*':
                 addToken(STAR);
                 break;
+
             case '!':
                 addToken(match('=') ? BANG_EQUAL : BANG);
                 break;
+
             case '=':
                 if (match('=')) addToken(EQUAL_EQUAL);
                 else if (match('>')) addToken(FAT_ARROW);
                 else addToken(EQUAL);
                 break;
+
             case '<':
                 if (match('=')) addToken(LESS_EQUAL);
                 else if (match('-')) addToken(REVERSE_ARROW);
                 else addToken(LESS);
                 break;
+
             case '>':
                 addToken(match('=') ? GREATER_EQUAL : GREATER);
                 break;
+
             case ':':
                 addToken(match(':') ? COLON_COLON : COLON);
+                break;
+
+            case '&':
+                if (match('&')) addToken(AMPERSAND_AMPERSAND);
+                else addToken(AMPERSAND);
+                break;
+
+            case '|':
+                if (match('|')) addToken(PIPE_PIPE);
+                else addToken(PIPE);
                 break;
 
             case '/':
@@ -144,7 +185,7 @@ class Scanner {
             default:
                 if (isDigit(c)) number();
                 else if (isAlpha(c)) identifier();
-                else EverScript.error(line, col, "ParseError", "Unexpected character.");
+                else EverScript.error(file, line, col, "SyntaxError", "Unexpected character.");
                 break;
         }
     }
@@ -198,7 +239,7 @@ class Scanner {
             advance();
         }
         if (isAtEnd()) {
-            EverScript.error(line, col, "ParseError", "Unterminated string; expected closing '" + quote + "'.");
+            EverScript.error(file, line, col, "SyntaxError", "Unterminated string; expected closing '" + quote + "'.");
             return;
         }
         advance();
@@ -252,6 +293,6 @@ class Scanner {
 
     private void addToken(TokenType type, Object literal) {
         String text = source.substring(start, current);
-        tokens.add(new Token(type, text, literal, line, col));
+        tokens.add(new Token(directory, file, type, text, literal, line, col));
     }
 }

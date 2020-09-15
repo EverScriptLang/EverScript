@@ -1,5 +1,5 @@
 class List: {
-  constructor() => {
+  List() => {
     this.head = null;
     this.tail = null;
     this.size = 0;
@@ -18,9 +18,7 @@ class List: {
     this.size = this.size + 1;
   }
 
-  get(idx) => {
-    return this.getNode(idx).getValue();
-  }
+  get(idx) => return this.getNode(idx).getValue();
 
   remove(idx) => {
     let node = this.getNode(idx);
@@ -109,17 +107,11 @@ class List: {
     return node;
   }
 
-  getSize() => {
-    return this.size;
-  }
+  getSize() => return this.size;
 
-  isEmpty() => {
-    return (this.head == null);
-  }
+  isEmpty() => return (this.head == null);
 
-  iterator() => {
-    return ListIterator(this.head);
-  }
+  iterator() => return ListIterator(this.head);
 
   toString() => {
     let node = this.head;
@@ -141,24 +133,20 @@ class List: {
 }
 
 class ListNode: {
-  constructor(value, previous, next) => {
+  ListNode(value, previous, next) => {
     this.value = value;
     this.previous = previous;
     this.next = next;
   }
 
-  getValue() => {
-    return this.value;
-  }
+  getValue() => return this.value;
 
   removePrevious() => {
     this.previous.next = null;
     this.previous = null;
   }
 
-  getPrevious() => {
-    return this.previous();
-  }
+  getPrevious() => return this.previous();
 
   setNext(next) => {
     this.next = next;
@@ -170,24 +158,18 @@ class ListNode: {
     this.next = null;
   }
 
-  getNext() => {
-    return this.next;
-  }
+  getNext() => return this.next;
 
-  toString() => {
-    return this.value;
-  }
+  toString() => return this.value;
 }
 
 class ListIterator: {
-  constructor(head) => {
+  ListIterator(head) => {
     this.curr = null;
     this.nextNode = head;
   }
 
-  hasNext() => {
-    return this.nextNode != null;
-  }
+  hasNext() => return this.nextNode != null;
 
   next() => {
     this.curr = this.nextNode;
@@ -199,7 +181,5 @@ class ListIterator: {
     return null;
   }
 
-  currNode() => {
-    return this.curr;
-  }
+  currNode() => return this.curr;
 }

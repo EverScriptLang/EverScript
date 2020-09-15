@@ -30,7 +30,7 @@ public class EverScript {
     nativeErrorClass();
     nativeListClass();
 
-    run(new String(bytes, Charset.defaultCharset()));
+    run(path, new String(bytes, Charset.defaultCharset()));
     if (errors > 0) {
       System.out.print("The EverScript interpreter found a total of " + errors + " error");
       if (errors > 1) System.out.println("s");
@@ -48,47 +48,52 @@ public class EverScript {
     nativeErrorClass();
     nativeListClass();
 
-    System.out.println("EasyScript REPL [31st of August, 2020]");
+    System.out.println("EverScript REPL [31st of August, 2020]");
     System.out.println("Press CTRL + C to exit");
 
     //noinspection InfiniteLoopStatement
     while (true) {
       System.out.print("~> ");
-      run(reader.readLine());
+      run("REPL", reader.readLine());
       hadError = false;
       errors = 0;
     }
   }
 
-  public static void run(String input) {
+  public static void run(String file, String input) {
     source = input;
-    Scanner scanner = new Scanner(input);
+    Scanner scanner = new Scanner(file, input);
     List<Token> tokens = scanner.scanTokens();
+
     Parser parser = new Parser(tokens);
     List<Stmt> statements = parser.parse();
+
     if (errors != 0) return;
     if (hadError) return;
+
     Resolver resolver = new Resolver(interpreter);
     resolver.resolve(statements);
+
     if (hadError) return;
     if (errors != 0) return;
+
     interpreter.interpret(statements);
   }
 
   static void error(Token token, String errorType, String message) {
-    error(token.line, token.col, errorType, message);
+    error(token.file, token.line, token.col, errorType, message);
   }
 
-  static void error(int line, int col, String errorType, String message) {
+  static void error(String file, int line, int col, String errorType, String message) {
     errors++;
     System.out.println(source.split("\n")[line - 1]);
-    System.out.println(repeat(col - 1) + String.format("^ [line %d, col %d]: %s: %s", line, col, errorType, message));
+    System.out.println(repeat(col - 1) + String.format("^ [file '%s', line %d, col %d]: %s: %s", file, line, col, errorType, message));
     System.out.println();
     hadError = true;
   }
 
   static void runtimeError(RuntimeError error) {
-    System.out.printf("[line %d, col %d]: %s%n", error.token.line, error.token.col, error.getMessage());
+    System.out.printf("[file '%s', line %d, col %d]: %s%n", error.token.file, error.token.line, error.token.col, error.getMessage());
     System.out.println();
     hadRuntimeError = true;
   }
@@ -110,7 +115,7 @@ public class EverScript {
       source.append(line).append("\n");
     }
 
-    EverScript.run(source.toString());
+    EverScript.run("natives/Error.evs", source.toString());
   }
 
   private static void nativeListClass() throws IOException {
@@ -124,6 +129,6 @@ public class EverScript {
       source.append(line).append("\n");
     }
 
-    EverScript.run(source.toString());
+    EverScript.run("natives/List.evs", source.toString());
   }
 }

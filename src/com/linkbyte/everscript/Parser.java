@@ -57,8 +57,16 @@ class Parser {
         List<Stmt.Function> staticMethods = new ArrayList<>();
 
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            boolean isStatic = match(STATIC);
-            (isStatic ? staticMethods : methods).add(function("method"));
+            if (match(STATIC)) {
+                Token methodName = peek();
+                if (methodName.lexeme.equals(name.lexeme)) {
+                    throw error(methodName, "Cannot use the 'static' modifier on a constructor declaration.");
+                } else {
+                    staticMethods.add(function("method"));
+                }
+            } else {
+                methods.add(function("method"));
+            }
         }
 
         consume(RIGHT_BRACE, "Expected '}' after class body.");
@@ -218,9 +226,10 @@ class Parser {
             consume(RIGHT_PAREN, "Expected ')' after parameters.");
         }
 
-        consume(FAT_ARROW, "Expected '=>' before '{'.");
-        consume(LEFT_BRACE, "Expected '{' before " + kind + " body.");
-        List<Stmt> body = block();
+        List<Stmt> body = new ArrayList<>();
+        consume(FAT_ARROW, "Expected '=>' before " + kind + " body.");
+        if (match(LEFT_BRACE)) body = block();
+        else body.add(statement());
 
         return new Expr.Function(params, body);
     }
@@ -288,7 +297,7 @@ class Parser {
 
     private Expr or() {
         Expr expr = and();
-        while (match(OR)) {
+        while (match(OR, PIPE_PIPE)) {
             Token operator = previous();
             Expr right = and();
             expr = new Expr.Logical(expr, operator, right);
@@ -298,7 +307,7 @@ class Parser {
 
     private Expr and() {
         Expr expr = equality();
-        while (match(AND)) {
+        while (match(AND, AMPERSAND_AMPERSAND)) {
             Token operator = previous();
             Expr right = equality();
             expr = new Expr.Logical(expr, operator, right);
@@ -347,7 +356,7 @@ class Parser {
     }
 
     private Expr unary() {
-        if (match(BANG, MINUS)) {
+        if (match(BANG, MINUS, PLUS_PLUS, MINUS_MINUS)) {
             Token operator = previous();
             Expr right = unary();
             return new Expr.Unary(operator, right);

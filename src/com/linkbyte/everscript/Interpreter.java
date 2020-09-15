@@ -110,13 +110,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         Map<String, ESFunction> staticMethods = new HashMap<>();
         for (Stmt.Function method : stmt.staticMethods) {
-            ESFunction function = new ESFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals("constructor"));
+            ESFunction function = new ESFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals(stmt.name.lexeme));
             staticMethods.put(method.name.lexeme, function);
         }
 
         Map<String, ESFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
-            ESFunction function = new ESFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals("constructor"));
+            ESFunction function = new ESFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals(stmt.name.lexeme));
             methods.put(method.name.lexeme, function);
         }
         ESClass klass = new ESClass(stmt.name.lexeme, (ESClass) superclass, methods, staticMethods);
@@ -138,13 +138,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitThrowStmt(Stmt.Throw stmt) {
         Object thrown = evaluate(stmt.thrown);
-        Token runtimeError = new Token(TokenType.IDENTIFIER, "Error", null, stmt.keyword.line, stmt.keyword.col);
+        Token runtimeError = new Token(stmt.keyword.directory, stmt.keyword.file, TokenType.IDENTIFIER, "Error", null, stmt.keyword.line, stmt.keyword.col);
 
         if (!(thrown instanceof ESInstance && ((ESInstance) thrown).klass().inherits(runtimeError))) {
             throw new RuntimeError(stmt.keyword, "Only objects that inherit 'Error' can be thrown.");
         }
 
-        Token messageToken = new Token(TokenType.IDENTIFIER, "message", null, 0, 0);
+        Token messageToken = new Token(stmt.keyword.directory, stmt.keyword.file, TokenType.IDENTIFIER, "message", null, 0, 0);
         Object message = ((ESCallable) ((ESInstance) thrown).get(messageToken)).call(this, new ArrayList<>());
 
         throw new UserRuntimeError((ESInstance) thrown, stringify(message), stmt.keyword);
@@ -177,19 +177,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                     } else {
                         Map<String, ESFunction> methods = new HashMap<>();
                         List<Stmt> body = new ArrayList<>();
-                        Token name = new Token(TokenType.IDENTIFIER, "message", null, 0, 0);
+                        Token name = new Token("", "", TokenType.IDENTIFIER, "message", null, 0, 0);
                         List<Token> params = new ArrayList<>();
-                        body.add(new Stmt.Return(new Token(TokenType.RETURN, "return", null, 0, 0), new Expr.Literal(error.getMessage())));
+                        body.add(new Stmt.Return(new Token("", "", TokenType.RETURN, "return", null, 0, 0), new Expr.Literal(error.getMessage())));
                         Stmt.Function function = new Stmt.Function(name, new Expr.Function(params, body));
                         methods.put("message", new ESFunction(name.lexeme, function.function, environment, false));
                         body = new ArrayList<>();
-                        name = new Token(TokenType.IDENTIFIER, "getType", null, 0, 0);
+                        name = new Token("", "", TokenType.IDENTIFIER, "getType", null, 0, 0);
                         params = new ArrayList<>();
-                        body.add(new Stmt.Return(new Token(TokenType.RETURN, "return", null, 0, 0), new Expr.Literal("RuntimeError")));
+                        body.add(new Stmt.Return(new Token("", "", TokenType.RETURN, "return", null, 0, 0), new Expr.Literal("RuntimeError")));
                         function = new Stmt.Function(name, new Expr.Function(params, body));
                         methods.put("getType", new ESFunction(name.lexeme, function.function, environment, false));
-                        Token superclass = new Token(TokenType.IDENTIFIER, "RuntimeError", null, catchStmt.identifier.line, catchStmt.identifier.col);
-                        ESClass runtimeError = new ESClass("RuntimeError", (ESClass) globals.get(superclass), methods, null);
+                        Token superclass = new Token("", "", TokenType.IDENTIFIER, "RuntimeError", null, catchStmt.identifier.line, catchStmt.identifier.col);
+                        ESClass runtimeError = new ESClass("RuntimeError", (ESClass) globals.get(superclass), methods, new HashMap<>());
                         ESInstance errorInstance = new ESInstance(runtimeError);
                         environment.define(catchStmt.identifier.lexeme, errorInstance);
                     }
@@ -299,6 +299,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             String library = name.split("\\.")[1];
             if (library.equals("System")) {
                 globals.define(stmt.namespace.lexeme, ESStandardLibrary._System);
+            } if (library.equals("Math")) {
+                globals.define(stmt.namespace.lexeme, ESStandardLibrary._Math);
             } else if (library.equals("**")) {
                 ESStandardLibrary.importAll(globals);
             }
@@ -318,7 +320,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             throw new RuntimeError(stmt.keyword, "There was an error while trying to import '" + module + "'.");
         }
 
-        EverScript.run(source.toString());
+        EverScript.run(name, source.toString());
 
         return null;
     }
@@ -454,6 +456,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object left = evaluate(expr.left);
         if (expr.operator.type == TokenType.OR) {
             if (isTruthy(left)) return left;
+        } else if (expr.operator.type == TokenType.PIPE_PIPE) {
+            if (isTruthy(left)) return left;
         } else {
             if (!isTruthy(left)) return left;
         }
@@ -505,6 +509,10 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             case MINUS:
                 checkNumberOperand(expr.operator, right);
                 return -(double) right;
+            case PLUS_PLUS:
+                return (double) right + 1;
+            case MINUS_MINUS:
+                return (double) right - 1;
         }
         return null;
     }

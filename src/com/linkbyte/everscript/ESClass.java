@@ -47,10 +47,6 @@ class ESClass extends ESInstance implements ESCallable {
     return null;
   }
 
-  public void addMethod(String name, ESFunction function) {
-    methods.put(name, function);
-  }
-
   @Override
   public String toString() {
     return name + " {}";
@@ -59,7 +55,7 @@ class ESClass extends ESInstance implements ESCallable {
   @Override
   public Object call(Interpreter interpreter, List<Object> arguments) {
     ESInstance instance = new ESInstance(this);
-    ESFunction initializer = methods.get("constructor");
+    ESFunction initializer = methods.get(name);
     if (initializer != null) {
       initializer.bind(instance).call(interpreter, arguments);
     }
@@ -69,7 +65,7 @@ class ESClass extends ESInstance implements ESCallable {
 
   @Override
   public int arity() {
-    ESFunction initializer = methods.get("constructor");
+    ESFunction initializer = methods.get(name);
     if (initializer == null) return 0;
     return initializer.arity();
   }

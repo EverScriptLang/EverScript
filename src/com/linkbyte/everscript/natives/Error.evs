@@ -3,43 +3,29 @@
 // `Error` behaves kind of like an interface. You inherit it and you must
 // implement the method `message`.
 class Error: {
-  message() => {
-    return "No message defined.";
-  }
+  message() => return "No message defined.";
 
-  getType() => {
-    return "Error";
-  }
+  getType() => return "Error";
 }
 
 // Throws an `Exception`.
 class Exception inherits Error: {
-  constructor(type, msg) => {
+  Exception(type, msg) => {
     this.type = type;
     this.msg = msg;
   }
 
-  message() => {
-    return this.type + ": " + this.msg;
-  }
+  message() => return this.type + ": " + this.msg;
 
-  getType() => {
-    return "Exception::" + this.type;
-  }
+  getType() => return "Exception::" + this.type;
 }
 
 // Throws an `UnhandledException`. Behaves similar to `Exception`,
 // except that here, the type of the error is hardcoded.
 class UnhandledException inherits Error: {
-  constructor(msg) => {
-    this.msg = msg;
-  }
+  UnhandledException(msg) => this.msg = msg;
 
-  message() => {
-    return this.msg;
-  }
+  message() => return this.msg;
 
-  getType() => {
-    return "UnhandledException";
-  }
+  getType() => return "UnhandledException";
 }

@@ -18,7 +18,7 @@ public class ESStandardLibrary {
 
             @Override
             public String toString() {
-                return "<System.exit native fn>";
+                return "System#exit()";
             }
         });
 
@@ -32,6 +32,11 @@ public class ESStandardLibrary {
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 return java.lang.System.getProperty((((String) arguments.get(0))));
             }
+
+            @Override
+            public String toString() {
+                return "System#getProperty()";
+            }
         });
 
         put("getEnv", new ESCallable() {
@@ -43,6 +48,81 @@ public class ESStandardLibrary {
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 return java.lang.System.getenv((((String) arguments.get(0))));
+            }
+
+            @Override
+            public String toString() {
+                return "System#getEnv()";
+            }
+        });
+    }});
+
+    public static final ESNativeInstance _Math = new ESNativeInstance("Math", new HashMap<>() {{
+        put("abs", new ESCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return Math.abs((Double) arguments.get(0));
+            }
+
+            @Override
+            public String toString() {
+                return "Math#abs()";
+            }
+        });
+
+        put("random", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return Math.random();
+            }
+
+            @Override
+            public String toString() {
+                return "Math#random()";
+            }
+        });
+
+        put("floor", new ESCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return Math.floor((Double) arguments.get(0));
+            }
+
+            @Override
+            public String toString() {
+                return "Math#floor()";
+            }
+        });
+
+        put("ceiling", new ESCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return Math.ceil((Double) arguments.get(0));
+            }
+
+            @Override
+            public String toString() {
+                return "Math#ceiling()";
             }
         });
     }});

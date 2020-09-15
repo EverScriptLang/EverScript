@@ -10,6 +10,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   Resolver(Interpreter interpreter) {
     this.interpreter = interpreter;
   }
+
   private enum FunctionType {
     NONE,
     FUNCTION,
@@ -65,7 +66,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     for (Stmt.Function method : stmt.methods) {
       FunctionType declaration = FunctionType.METHOD;
-      if (method.name.lexeme.equals("constructor")) {
+      if (method.name.lexeme.equals(stmt.name.lexeme)) {
         declaration = FunctionType.INITIALIZER;
       }
       resolveFunction(method, declaration, FunctionCtx.DYNAMIC);
