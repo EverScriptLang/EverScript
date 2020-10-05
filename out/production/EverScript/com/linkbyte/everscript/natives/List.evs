@@ -15,7 +15,7 @@ class List: {
       this.tail = node;
     }
 
-    this.size = this.size + 1;
+    ++this.size;
   }
 
   get(idx) => return this.getNode(idx).getValue();
@@ -47,7 +47,7 @@ class List: {
       this.tail.removeNext();
     } else node.getPrevious().setNext(node.getNext());
 
-    this.size = this.size - 1;
+    --this.size;
     return node;
   }
 

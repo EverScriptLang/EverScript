@@ -74,7 +74,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     for (Stmt.Function method : stmt.staticMethods) {
       FunctionType declaration = FunctionType.METHOD;
-      if (method.name.lexeme.equals("init")) {
+      if (method.name.lexeme.equals(stmt.name.lexeme)) {
         declaration = FunctionType.INITIALIZER;
       }
       resolveFunction(method, declaration, FunctionCtx.STATIC);
@@ -93,12 +93,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visitEnumStmt(Stmt.Enum stmt) {
     declare(stmt.name);
     define(stmt.name);
-
-    for (Map.Entry<Token, String> property : stmt.properties.entrySet()) {
-      declare(property.getKey());
-      define(property.getKey());
-    }
-
+    stmt.properties.forEach(this::declare);
+    stmt.properties.forEach(this::define);
     return null;
   }
 
@@ -146,12 +142,6 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     resolve(stmt.condition);
     resolve(stmt.thenBranch);
     if (stmt.elseBranch != null) resolve(stmt.elseBranch);
-    return null;
-  }
-
-  @Override
-  public Void visitPrintStmt(Stmt.Print stmt) {
-    resolve(stmt.expression);
     return null;
   }
 

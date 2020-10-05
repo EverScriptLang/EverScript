@@ -1,0 +1,21 @@
+import "EverScript.Internals" as internals;
+
+// Number class
+class Number: {
+  // Static methods
+  static isNaN(val) => return internals.getDoubleMethod("isNaN", val);
+  static isFinite(val) => return internals.getDoubleMethod("isFinite", val);
+  static isInfinite(val) => return internals.getDoubleMethod("isInfinite", val);
+  static parseDouble(val) => return internals.getDoubleMethod("parseDouble", val);
+  static isDouble(val) => return internals.getDoubleMethod("isDouble", val);
+  static parseInt(val) => return internals.getIntegerMethod("parseInt", val);
+  static isInteger(val) => return internals.getIntegerMethod("isInteger", val);
+}
+
+// Number constants
+Number.EPSILON = 2 ** (-52);
+Number.MAX_VALUE = internals.getDoubleConstant("MAX_VALUE");
+Number.MIN_VALUE = internals.getDoubleConstant("MIN_VALUE");
+Number.NaN = internals.getDoubleConstant("NaN");
+Number.NEGATIVE_INFINITY = internals.getDoubleConstant("NEGATIVE_INFINITY");
+Number.POSITIVE_INFINITY = internals.getDoubleConstant("POSITIVE_INFINITY");

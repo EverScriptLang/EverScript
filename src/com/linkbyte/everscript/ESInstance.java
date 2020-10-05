@@ -28,6 +28,15 @@ class ESInstance {
     return klass.name + " instance";
   }
   
+  public boolean isInstanceOf(ESClass classType) {
+    ESClass klass = this.klass;
+    while (klass != null) {
+      if (klass == classType) return true;
+      klass = klass.superclass;
+    }
+    return true;
+  }
+  
   ESClass klass() {
     return klass;
   }

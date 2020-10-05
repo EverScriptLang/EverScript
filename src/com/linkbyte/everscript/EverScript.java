@@ -17,6 +17,7 @@ public class EverScript {
       System.out.println("Usage: everscript [script]");
       System.exit(64);
     } else if (args.length == 1) {
+      if (!args[0].endsWith(".evs")) throw new NativeError("Extension not recognized by the EverScript interpreter. Accepted extensions: '.evs'");
       runFile(args[0]);
     } else {
       runPrompt();
@@ -26,11 +27,11 @@ public class EverScript {
   private static void runFile(String path) throws IOException {
     byte[] bytes = Files.readAllBytes(Paths.get(path));
 
-    // Run native classes
-    nativeErrorClass();
-    nativeListClass();
-
+    new LibraryLoader().loadClasses();
+    int start = Commons.clock();
     run(path, new String(bytes, Charset.defaultCharset()));
+    int end = Commons.clock() - start;
+    System.out.println("Program executed in " + end + "ms.");
     if (errors > 0) {
       System.out.print("The EverScript interpreter found a total of " + errors + " error");
       if (errors > 1) System.out.println("s");
@@ -44,17 +45,15 @@ public class EverScript {
     InputStreamReader input = new InputStreamReader(System.in);
     BufferedReader reader = new BufferedReader(input);
 
-    // Run native classes
-    nativeErrorClass();
-    nativeListClass();
+    new LibraryLoader().loadClasses();
 
-    System.out.println("EverScript REPL [31st of August, 2020]");
+    System.out.println("EverScript REPL [5th of October, 2020]");
     System.out.println("Press CTRL + C to exit");
 
     //noinspection InfiniteLoopStatement
     while (true) {
       System.out.print("~> ");
-      run("REPL", reader.readLine());
+      run("REPL", reader.readLine() + "\n");
       hadError = false;
       errors = 0;
     }
@@ -101,34 +100,5 @@ public class EverScript {
   private static String repeat(int n) {
     if (n <= 0) return "";
     return new String(new char[n]).replace('\0', ' ');
-  }
-
-  // Native classes
-  private static void nativeErrorClass() throws IOException {
-    InputStreamReader eci = new InputStreamReader(EverScript.class.getResourceAsStream("natives/Error.evs"));
-    BufferedReader ecbf = new BufferedReader(eci);
-
-    String line;
-    StringBuilder source = new StringBuilder();
-
-    while ((line = ecbf.readLine()) != null) {
-      source.append(line).append("\n");
-    }
-
-    EverScript.run("natives/Error.evs", source.toString());
-  }
-
-  private static void nativeListClass() throws IOException {
-    InputStreamReader lci = new InputStreamReader(EverScript.class.getResourceAsStream("natives/List.evs"));
-    BufferedReader lcbf = new BufferedReader(lci);
-
-    String line;
-    StringBuilder source = new StringBuilder();
-
-    while((line = lcbf.readLine()) != null) {
-      source.append(line).append("\n");
-    }
-
-    EverScript.run("natives/List.evs", source.toString());
   }
 }

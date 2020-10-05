@@ -4,13 +4,18 @@ import java.util.*;
 
 class ESEnum {
     final String name;
-    final Map<Token, String> properties;
+    final List<Token> properties;
+    final List<String> props = new ArrayList<>();
     final Map<String, ESCallable> methods;
 
-    ESEnum(String name, Map<Token, String> properties) {
+    ESEnum(String name, List<Token> properties) {
 
         this.name = name;
         this.properties = properties;
+
+        for (Token property : properties) {
+            props.add(property.lexeme);
+        }
 
         methods = createMethods(this);
     }
@@ -37,21 +42,21 @@ class ESEnum {
         throw new RuntimeError(name, "No such method exists '" + name.lexeme + "' exists in 'enum' type.");
     }
 
-    public Object getProperty(Token property) {
-        if (properties.containsValue(property.lexeme)) return property.lexeme;
-        throw new RuntimeError(property, "Value '" + property.lexeme + "' does not exist in enum '" + name + "'.");
+    public Object getProperty(String property, Token name) {
+        if (props.contains(property)) return props.indexOf(property);
+        else throw new RuntimeError(name, "Value '" + property + "' does not exist in enum '" + this.name + "'.");
     }
 
     @Override
     public String toString() {
-        String _enum = "{ ";
+        StringBuilder _enum = new StringBuilder("{ ");
 
-        for (Map.Entry<Token, String> values : properties.entrySet()) {
-            _enum += values.getValue() + ", ";
+        for (Token prop : properties) {
+            _enum.append(String.format("%s: %d, ", prop.lexeme, properties.indexOf(prop)));
         }
 
-        _enum += "}";
+        _enum.append("}");
 
-        return _enum;
+        return _enum.toString();
     }
 }

@@ -15,11 +15,6 @@ public class ESStandardLibrary {
                 java.lang.System.exit(((Double) arguments.get(0)).intValue());
                 return null;
             }
-
-            @Override
-            public String toString() {
-                return "System#exit()";
-            }
         });
 
         put("getProperty", new ESCallable() {
@@ -31,11 +26,6 @@ public class ESStandardLibrary {
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 return java.lang.System.getProperty((((String) arguments.get(0))));
-            }
-
-            @Override
-            public String toString() {
-                return "System#getProperty()";
             }
         });
 
@@ -49,16 +39,11 @@ public class ESStandardLibrary {
             public Object call(Interpreter interpreter, List<Object> arguments) {
                 return java.lang.System.getenv((((String) arguments.get(0))));
             }
-
-            @Override
-            public String toString() {
-                return "System#getEnv()";
-            }
         });
     }});
 
-    public static final ESNativeInstance _Math = new ESNativeInstance("Math", new HashMap<>() {{
-        put("abs", new ESCallable() {
+    public static final ESNativeInstance Internals = new ESNativeInstance("Internals", new HashMap<>() {{
+        put("getDoubleConstant", new ESCallable() {
             @Override
             public int arity() {
                 return 1;
@@ -66,16 +51,79 @@ public class ESStandardLibrary {
 
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                return Math.abs((Double) arguments.get(0));
-            }
+                String constant = (String) arguments.get(0);
+                switch (constant) {
+                    case "MAX_VALUE":
+                        return Double.MAX_VALUE;
 
-            @Override
-            public String toString() {
-                return "Math#abs()";
+                    case "MIN_VALUE":
+                        return Double.MIN_VALUE;
+
+                    case "NaN":
+                        return Double.NaN;
+
+                    case "POSITIVE_INFINITY":
+                        return Double.POSITIVE_INFINITY;
+
+                    case "NEGATIVE_INFINITY":
+                        return Double.NEGATIVE_INFINITY;
+
+                    default:
+                        throw new NativeError("Unrecognized 'Double' constant '" + constant + "'.");
+                }
             }
         });
 
-        put("random", new ESCallable() {
+        put("getDoubleMethod", new ESCallable() {
+            @Override
+            public int arity() {
+                return 2;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                String method = (String) arguments.get(0);
+                Object value = arguments.get(1);
+                switch (method) {
+                    case "isNaN":
+                        return Double.isNaN((Double) value);
+                    case "isFinite":
+                        return Double.isFinite((Double) value);
+                    case "isInfinite":
+                        return Double.isInfinite((Double) value);
+                    case "parseDouble":
+                        return Double.parseDouble((String) value);
+                    case "isDouble":
+                        return value instanceof Double;
+
+                    default:
+                        throw new NativeError("Unrecognized 'Double' method '" + method + "'.");
+                }
+            }
+        });
+
+        put("getIntegerMethod", new ESCallable() {
+            @Override
+            public int arity() {
+                return 2;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                String method = (String) arguments.get(0);
+                Object value = arguments.get(1);
+                switch (method) {
+                    case "parseInt":
+                        return Integer.parseInt((String) value);
+                    case "isInteger":
+                        return value instanceof Integer;
+                    default:
+                        throw new NativeError("Unrecognized 'Integer' method '" + method +"'.");
+                }
+            }
+        });
+
+        put("", new ESCallable() {
             @Override
             public int arity() {
                 return 0;
@@ -83,51 +131,217 @@ public class ESStandardLibrary {
 
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                return Math.random();
-            }
-
-            @Override
-            public String toString() {
-                return "Math#random()";
+                return null;
             }
         });
 
-        put("floor", new ESCallable() {
+        put("", new ESCallable() {
             @Override
             public int arity() {
-                return 1;
+                return 0;
             }
 
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                return Math.floor((Double) arguments.get(0));
-            }
-
-            @Override
-            public String toString() {
-                return "Math#floor()";
+                return null;
             }
         });
 
-        put("ceiling", new ESCallable() {
+        put("", new ESCallable() {
             @Override
             public int arity() {
-                return 1;
+                return 0;
             }
 
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                return Math.ceil((Double) arguments.get(0));
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
             }
 
             @Override
-            public String toString() {
-                return "Math#ceiling()";
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
+            }
+        });
+
+        put("", new ESCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return null;
             }
         });
     }});
 
     public static void importAll(Environment environment) {
         environment.define("System", _System);
+        environment.define("Internals", Internals);
     }
 }

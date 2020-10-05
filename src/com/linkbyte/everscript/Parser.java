@@ -29,7 +29,6 @@ class Parser {
     private Stmt declaration() {
         try {
             if (match(CLASS)) return classDeclaration();
-            if (match(ABSTRACT)) return abstractClassDeclaration();
             if (match(FUN)) return function("function");
             if (match(VAR)) return varDeclaration();
             if (match(ENUM)) return enumDeclaration();
@@ -42,7 +41,7 @@ class Parser {
     }
 
     private Stmt classDeclaration() {
-        Token name = consume(IDENTIFIER, "Expected class name.");
+        Token name = consume(IDENTIFIER, "Expected the class name.");
 
         Expr.Variable superclass = null;
         if (match(INHERITS)) {
@@ -74,14 +73,9 @@ class Parser {
         return new Stmt.Class(name, superclass, methods, staticMethods);
     }
 
-    private Stmt abstractClassDeclaration() {
-        throw error(peek(), "Abstract classes are not implemented.");
-    }
-
     private Stmt statement() {
         if (match(FOR)) return forStatement();
         if (match(IF)) return ifStatement();
-        if (match(PRINT)) return printStatement();
         if (match(RETURN)) return returnStatement();
         if (match(WHILE)) return whileStatement();
         if (match(LEFT_BRACE)) return new Stmt.Block(block());
@@ -136,12 +130,6 @@ class Parser {
         return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
-    private Stmt printStatement() {
-        Expr value = expression();
-        consume(SEMICOLON, "Expected ';' after value.");
-        return new Stmt.Print(value);
-    }
-
     private Stmt returnStatement() {
         Token keyword = previous();
         Expr value = null;
@@ -166,14 +154,14 @@ class Parser {
         Token name = consume(IDENTIFIER, "Expected 'enum' name.");
         consume(COLON, "Expected ':' before '{'.");
         consume(LEFT_BRACE, "Expected '{' before 'enum' body.");
-        Map<Token, String> properties = new HashMap<>();
+        List<Token> properties = new ArrayList<>();
         if (!check(RIGHT_BRACE)) {
             do {
                 if (properties.size() >= 256) {
                     throw error(peek(), "Cannot have more than 256 properties.");
                 }
                 Token property = consume(IDENTIFIER, "Expected property name.");
-                properties.put(property, property.lexeme);
+                properties.add(property);
             } while (match(COMMA));
         }
         consume(RIGHT_BRACE, "Expected '}' after 'enum' body.");
@@ -194,7 +182,7 @@ class Parser {
         Expr module = expression();
         consume(AS, "Expected 'as' after module name.");
         Token namespace = consume(IDENTIFIER, "Expected a namespace identifier.");
-        consume(SEMICOLON, "Expected ';' after module name.");
+        consume(SEMICOLON, "Expected ';' after module statement.");
         return new Stmt.Import(keyword, module, namespace);
     }
 
@@ -206,7 +194,8 @@ class Parser {
 
     private Stmt.Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expected " + kind + " name.");
-        return new Stmt.Function(name, functionBody(kind));
+        if (kind.equals("function") || kind.equals("method")) return new Stmt.Function(name, functionBody(kind));
+        else return new Stmt.Function(name, abstractFunctionBody(kind));
     }
 
     private Expr.Function functionBody(String kind) {
@@ -217,9 +206,7 @@ class Parser {
             params = new ArrayList<>();
             if (!check(RIGHT_PAREN)) {
                 do {
-                    if (params.size() >= 256) {
-                        throw error(peek(), "Cannot have more than 256 parameters.");
-                    }
+                    if (params.size() >= 256) throw error(peek(), "Cannot have more than 256 parameters.");
                     params.add(consume(IDENTIFIER, "Expected parameter name"));
                 } while (match(COMMA));
             }
@@ -232,6 +219,24 @@ class Parser {
         else body.add(statement());
 
         return new Expr.Function(params, body);
+    }
+
+    private Expr.Function abstractFunctionBody(String kind) {
+        List<Token> params = null;
+        if (check(LEFT_PAREN)) {
+            consume(LEFT_PAREN, "Expected '(' after " + kind + " name.");
+            params = new ArrayList<>();
+            if (!check(RIGHT_PAREN)) {
+                do {
+                    if (params.size() >= 256) throw error(peek(), "Cannot have more than 256 parameters");
+                    params.add(consume(IDENTIFIER, "Expected parameter name."));
+                } while (match(COMMA));
+            }
+            consume(RIGHT_PAREN, "Expected ')' after parameters.");
+        }
+        consume(SEMICOLON, "Expected ';' after " + kind + " declaration.");
+
+        return new Expr.Function(params, new ArrayList<>());
     }
 
     private List<Stmt> block() {
@@ -327,7 +332,7 @@ class Parser {
 
     private Expr comparison() {
         Expr expr = addition();
-        while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
+        while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL, INSTANCEOF, RIGHT_SHIFT, LEFT_SHIFT)) {
             Token operator = previous();
             Expr right = addition();
             expr = new Expr.Binary(expr, operator, right);
@@ -347,7 +352,7 @@ class Parser {
 
     private Expr multiplication() {
         Expr expr = unary();
-        while (match(SLASH, STAR)) {
+        while (match(SLASH, STAR, MODULO, EXPONENTIATION, XOR)) {
             Token operator = previous();
             Expr right = unary();
             expr = new Expr.Binary(expr, operator, right);
@@ -378,7 +383,7 @@ class Parser {
     private Expr.Dictionary dictionary() {
         Token name = backwards(3);
 
-        Map<Token, Object> properties = new HashMap<>();
+        LinkedHashMap<Token, Object> properties = new LinkedHashMap<>();
 
         if (match(RIGHT_BRACE)) return new Expr.Dictionary(name, properties);
 
@@ -541,7 +546,6 @@ class Parser {
                 case FOR:
                 case IF:
                 case WHILE:
-                case PRINT:
                 case RETURN:
                 case ENUM:
                 case THROW:

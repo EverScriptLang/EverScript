@@ -12,6 +12,10 @@ class Scanner {
     private int line, col, start, current;
     private final String directory, file;
 
+    private int openParen = 0;
+    private int openBracket = 0;
+    private int openBrace = 0;
+
     static {
         keywords = new HashMap<>();
         keywords.put("and", AND);
@@ -23,7 +27,6 @@ class Scanner {
         keywords.put("if", IF);
         keywords.put("null", NIL);
         keywords.put("or", OR);
-        keywords.put("print", PRINT);
         keywords.put("return", RETURN);
         keywords.put("super", SUPER);
         keywords.put("this", THIS);
@@ -45,6 +48,10 @@ class Scanner {
         keywords.put("abstract", ABSTRACT);
         keywords.put("private", PRIVATE);
         keywords.put("native", NATIVE);
+        keywords.put("match", MATCH);
+        keywords.put("case", CASE);
+        keywords.put("other", OTHER);
+        keywords.put("instanceof", INSTANCEOF);
     }
 
     Scanner(String file, String source) {
@@ -79,26 +86,32 @@ class Scanner {
         switch (c) {
             case '(':
                 addToken(LEFT_PAREN);
+                ++openParen;
                 break;
 
             case ')':
                 addToken(RIGHT_PAREN);
+                --openParen;
                 break;
 
             case '{':
                 addToken(LEFT_BRACE);
+                ++openBrace;
                 break;
 
             case '}':
                 addToken(RIGHT_BRACE);
+                --openBrace;
                 break;
 
             case '[':
                 addToken(LEFT_BRACKET);
+                ++openBracket;
                 break;
 
             case ']':
                 addToken(RIGHT_BRACKET);
+                --openBracket;
                 break;
 
             case ',':
@@ -107,6 +120,10 @@ class Scanner {
 
             case '.':
                 addToken(DOT);
+                break;
+
+            case '%':
+                addToken(MODULO);
                 break;
 
             case '-':
@@ -127,7 +144,12 @@ class Scanner {
                 break;
 
             case '*':
-                addToken(STAR);
+                if (match('*')) addToken(EXPONENTIATION);
+                else addToken(STAR);
+                break;
+
+            case '^':
+                addToken(XOR);
                 break;
 
             case '!':
@@ -143,11 +165,14 @@ class Scanner {
             case '<':
                 if (match('=')) addToken(LESS_EQUAL);
                 else if (match('-')) addToken(REVERSE_ARROW);
+                else if (match('<')) addToken(LEFT_SHIFT);
                 else addToken(LESS);
                 break;
 
             case '>':
-                addToken(match('=') ? GREATER_EQUAL : GREATER);
+                if (match('=')) addToken(GREATER_EQUAL);
+                if (match('>')) addToken(RIGHT_SHIFT);
+                else addToken(GREATER);
                 break;
 
             case ':':

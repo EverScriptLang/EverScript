@@ -1,6 +1,7 @@
 package com.linkbyte.everscript;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 class ESDictionary {
     final Token name;
@@ -31,14 +32,6 @@ class ESDictionary {
 
     @Override
     public String toString() {
-        String dict = "{ ";
-
-        for (Map.Entry<String, Object> props : properties.entrySet()) {
-            dict += props.getKey() + ": " + props.getValue() + ", ";
-        }
-
-        dict += " }";
-
-        return dict;
+        return properties.entrySet().stream().map(entry -> entry.getKey() + ": " + Interpreter.stringify(entry.getValue())).collect(Collectors.joining(", ", "{ ", " }"));
     }
 }

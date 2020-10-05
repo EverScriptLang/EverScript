@@ -39,6 +39,32 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 return checkType(value);
             }
         });
+
+        globals.define("print", new ESCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                System.out.print(stringify(arguments.get(0)));
+                return null;
+            }
+        });
+
+        globals.define("println", new ESCallable() {
+            @Override
+            public int arity() {
+                return 1;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                System.out.println(stringify(arguments.get(0)));
+                return null;
+            }
+        });
     }
 
     private String checkType(Object value) {
@@ -108,23 +134,22 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             environment.define("super", superclass);
         }
 
+        Map<String, ESFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            ESFunction function = new ESFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals(stmt.name.lexeme));
+            methods.put(method.name.lexeme, function);
+        }
+
         Map<String, ESFunction> staticMethods = new HashMap<>();
         for (Stmt.Function method : stmt.staticMethods) {
             ESFunction function = new ESFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals(stmt.name.lexeme));
             staticMethods.put(method.name.lexeme, function);
         }
 
-        Map<String, ESFunction> methods = new HashMap<>();
-        for (Stmt.Function method : stmt.methods) {
-            ESFunction function = new ESFunction(method.name.lexeme, method.function, environment, method.name.lexeme.equals(stmt.name.lexeme));
-            methods.put(method.name.lexeme, function);
-        }
-        ESClass klass = new ESClass(stmt.name.lexeme, (ESClass) superclass, methods, staticMethods);
-
         if (superclass != null) {
             environment = environment.enclosing;
         }
-        environment.assign(stmt.name, klass);
+        environment.assign(stmt.name, new ESClass(stmt.name.lexeme, (ESClass) superclass, methods, staticMethods));
         return null;
     }
 
@@ -253,13 +278,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void visitPrintStmt(Stmt.Print stmt) {
-        Object value = evaluate(stmt.expression);
-        System.out.println(stringify(value));
-        return null;
-    }
-
-    @Override
     public Void visitReturnStmt(Stmt.Return stmt) {
         Object value = null;
         if (stmt.value != null) value = evaluate(stmt.value);
@@ -297,12 +315,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         if (name.startsWith("EverScript.")) {
             String library = name.split("\\.")[1];
-            if (library.equals("System")) {
-                globals.define(stmt.namespace.lexeme, ESStandardLibrary._System);
-            } if (library.equals("Math")) {
-                globals.define(stmt.namespace.lexeme, ESStandardLibrary._Math);
-            } else if (library.equals("**")) {
-                ESStandardLibrary.importAll(globals);
+            switch (library) {
+                case "System":
+                    globals.define(stmt.namespace.lexeme, ESStandardLibrary._System);
+                    break;
+                case "Internals":
+                    if (!stmt.keyword.file.startsWith("natives")) {
+                        throw new RuntimeError(stmt.keyword, "Sorry, the 'Internals' standard library cannot be exposed to the user.");
+                    } else {
+                        globals.define(stmt.namespace.lexeme, ESStandardLibrary.Internals);
+                    }
+                    break;
+                case "**":
+                    ESStandardLibrary.importAll(globals);
+                    break;
             }
 
             return null;
@@ -380,6 +406,25 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             case STAR:
                 checkNumberOperands(expr.operator, left, right);
                 return (double) left * (double) right;
+            case INSTANCEOF:
+                if (!(right instanceof ESClass)) throw new RuntimeError(expr.operator, "Right operand must be of type 'class'.");
+                if (!(left instanceof ESInstance)) throw new RuntimeError(expr.operator, "Left operand must be of type 'instance'.");
+                return (((ESInstance) left).isInstanceOf((ESClass) right));
+            case MODULO:
+                checkNumberOperands(expr.operator, left, right);
+                return (double) left % (double) right;
+            case RIGHT_SHIFT:
+                checkNumberOperands(expr.operator, left, right);
+                return (int)(double) left >> (int)(double) right;
+            case LEFT_SHIFT:
+                checkNumberOperands(expr.operator, left, right);
+                return (int)(double) left << (int)(double) right;
+            case EXPONENTIATION:
+                checkNumberOperands(expr.operator, left, right);
+                return Math.pow((double) left, (double) right);
+            case XOR:
+                checkNumberOperands(expr.operator, left, right);
+                return (int)(double) left ^ (int)(double) right;
         }
         return null;
     }
@@ -426,7 +471,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         if (object instanceof ESEnum) {
             if (((ESEnum) object).methods.containsKey(expr.name.lexeme)) {
                 return ((ESEnum) object).getMethod(expr.name);
-            } else return ((ESEnum) object).getProperty(expr.name);
+            } else return ((ESEnum) object).getProperty(expr.name.lexeme, expr.name);
         }
 
         if (object instanceof ESNativeInstance) {
@@ -503,6 +548,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = evaluate(expr.right);
+        double value = (double) evaluate(expr.right);
         switch (expr.operator.type) {
             case BANG:
                 return !isTruthy(right);
@@ -510,15 +556,18 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 checkNumberOperand(expr.operator, right);
                 return -(double) right;
             case PLUS_PLUS:
-                return (double) right + 1;
+                return value += 1;
             case MINUS_MINUS:
-                return (double) right - 1;
+                return value -= 1;
         }
         return null;
     }
 
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
+        if (expr.name.lexeme.equals("internals") && !expr.name.file.startsWith("natives")) {
+            throw new RuntimeError(expr.name, "Cannot access a reserved variable name.");
+        }
         return lookUpVariable(expr.name, expr);
     }
 
@@ -579,7 +628,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return a.equals(b);
     }
 
-    private String stringify(Object object) {
+    public static String stringify(Object object) {
         if (object == null) return "null";
         if (object instanceof Double) {
             String text = object.toString();
@@ -589,8 +638,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             return text;
         }
         if (object instanceof ESArray) {
-            List<String> elementsString = ((ESArray) object).elements.stream().map(this::stringify).collect(Collectors.toList());
-            return "[" + String.join(", ", elementsString) + "]";
+            List<String> elementsString = ((ESArray) object).elements.stream().map(Interpreter::stringify).collect(Collectors.toList());
+            return "[ " + String.join(", ", elementsString) + " ]";
         }
         return object.toString();
     }

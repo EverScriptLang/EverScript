@@ -1,3 +1,18 @@
-class a: {
-  a() => {}
-}
+enum Codes: {
+  A,
+  B,
+  C,
+  D,
+  E
+};
+
+println(Codes.A); // 0
+println(Codes.B); // 1
+println(Codes.C); // 2
+println(Codes.D); // 3
+println(Codes.E); // 4
+println(Codes.length()); // 5
+
+(fn(x, y, z) => {
+  println(x + y + z);
+})(1, 2, 3); // 6

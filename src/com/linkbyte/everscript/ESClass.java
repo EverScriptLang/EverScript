@@ -5,13 +5,8 @@ import java.util.*;
 class ESClass extends ESInstance implements ESCallable {
   final String name;
   final ESClass superclass;
-  private final static ESClass MetaClass;
   private final Map<String, ESFunction> methods;
   private final Map<String, ESFunction> _staticMethods = new HashMap<>();
-
-  static {
-    MetaClass = new ESClass("MetaClass", new HashMap<>());
-  }
 
   private ESClass(String name, Map<String, ESFunction> staticMethods) {
     super(null);
@@ -22,7 +17,7 @@ class ESClass extends ESInstance implements ESCallable {
   }
 
   ESClass(String name, ESClass superclass, Map<String, ESFunction> methods, Map<String, ESFunction> staticMethods) {
-    super(MetaClass);
+    super(superclass);
     this.superclass = superclass;
     this.name = name;
     this.methods = methods;
@@ -49,7 +44,9 @@ class ESClass extends ESInstance implements ESCallable {
 
   @Override
   public String toString() {
-    return name + " {}";
+    if (methods.containsKey("toString")) {
+      return (String) methods.get("toString").call(new Interpreter(), new ArrayList<>());
+    } else return this.name + " {}";
   }
 
   @Override
